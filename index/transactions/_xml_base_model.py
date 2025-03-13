@@ -4,6 +4,7 @@ from typing import (
     Optional,
     Union,
     Literal,
+    Self,
 )
 from pydantic import BaseModel, Field
 from datetime import datetime
@@ -79,7 +80,7 @@ class XMLBaseModel(BaseModel):
         return ET.tostring(self.model_dump_xml(tag=tag), encoding="utf-8")
 
     @classmethod
-    def model_validate_xml(cls, xml_data: Union[bytes, str, ET.Element], encoding: Optional[str] = "utf-8") -> "XMLBaseModel":
+    def model_validate_xml(cls, xml_data: Union[bytes, str, ET.Element], encoding: Optional[str] = "utf-8") -> Self:
         """
         Parses XML data and returns an instance of the model by iterating over its fields.
         

@@ -22,7 +22,7 @@ class Document(XMLBaseModel):
     """
     numero: Optional[str] = Field(None,
         description="""
-            Un nombre unique qui identifie l'article.
+            Un nombre unique qui identifie la revue dans laquelle est apparu l'article.
         """
     )
     date: Optional[datetime] = Field(None,

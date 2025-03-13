@@ -7,8 +7,8 @@ on extrait les informations suivantes et on les écrit dans un fichier XML :
     - le nom du fichier
     - le numéro du bulletin (extrait du <span class="style32">, via les chiffres)
     - la date de parution (extrait du <title> puis reformaté en jj/mm/aaaa)
-    - la rubrique (pour le bulletin, par exemple, le contenu d'un <span class="style42">)
-    - le titre de l’article (par exemple le contenu d'un <span class="style17">)
+    - la rubrique (pour le bulletin, le contenu d'un <span class="style42">)
+    - le titre de l’article (le contenu d'un <span class="style17">)
     - l’auteur (détecté dans un paragraphe contenant "email" et "ADIT")
     - le texte de l’article (texte figurant dans le ou les <p> situés dans le <td class="FWExtra2">, en ignorant celui contenant rubrique/titre)
     - les images (URL et légende, ici recherchées dans un <div> centré)
@@ -44,7 +44,6 @@ def extract_date(soup):
     Extrait la date de parution.
     On commence par analyser le <title> qui contient généralement une date 
     au format "aaaa/mm/jj" et on la reformate en "jj/mm/aaaa".
-    Si non trouvée, on cherche un motif dans l'ensemble du document.
     """
     date_str = ''
     title_tag = soup.find('title')
@@ -54,15 +53,6 @@ def extract_date(soup):
         m = re.search(r'(\d{4})/(\d{1,2})/(\d{1,2})', title_text)
         if m:
             yyyy, mm, dd = m.groups()
-            dd = dd.zfill(2)
-            mm = mm.zfill(2)
-            date_str = f"{dd}/{mm}/{yyyy}"
-            return date_str
-    # Si non trouvé dans le titre, recherche dans l'ensemble du document un pattern date.
-    for span in soup.find_all('span'):
-        m = re.search(r'(\d{1,2})/(\d{1,2})/(\d{4})', span.get_text())
-        if m:
-            dd, mm, yyyy = m.groups()
             dd = dd.zfill(2)
             mm = mm.zfill(2)
             date_str = f"{dd}/{mm}/{yyyy}"
@@ -83,8 +73,6 @@ def extract_rubrique(soup):
         if span42 and span17:
             rubrique = span42.get_text(strip=True)
             break
-    if not rubrique:
-        print("[Avertissement] Bulletin : l'élément <rubrique> est vide.")
     return rubrique
 
 def extract_titre(soup):
@@ -100,21 +88,28 @@ def extract_titre(soup):
         if span42 and span17:
             titre = span17.get_text(strip=True)
             break
-    if not titre:
-        print("[Avertissement] Bulletin : l'élément <titre> est vide.")
     return titre
 
 def extract_auteur(soup):
     """
-    Extrait l’auteur de l’article.
-    On parcourt les paragraphes (ici en cherchant ceux contenant 'email' et 'ADIT').
+    Extrait l'auteur de l'article.
+    On recherche le paragraphe qui suit l'en-tête 'Rédacteurs :'.
     """
     auteur = ''
-    for p in soup.find_all('p'):
-        text = p.get_text(separator=" ", strip=True)
-        if "email" in text.lower() and "adit" in text.lower():
-            auteur = text
-            break
+    # Chercher le span contenant "Rédacteurs :"
+    redacteurs_label = soup.find("span", class_="style28", string=re.compile("Rédacteur", re.IGNORECASE))
+    if redacteurs_label:
+        # Trouver le parent tr
+        parent_tr = redacteurs_label.find_parent("tr")
+        if parent_tr:
+            # Dans la même ligne, trouver la cellule contenant l'information de l'auteur
+            tds = parent_tr.find_all("td")
+            if len(tds) > 1:
+                # Le deuxième <td> contient l'info de l'auteur
+                auteur_td = tds[1]
+                p_auteur = auteur_td.find("p", class_="style44")
+                if p_auteur:
+                    auteur = p_auteur.get_text(separator=" ", strip=True)
     return auteur
 
 def extract_texte(soup):
@@ -141,7 +136,7 @@ def extract_texte(soup):
 def extract_images(soup):
     """
     Extrait l’information relative aux images.
-    Ici, on recherche un <div> avec un style indiquant "text-align: center" (souvent d’où provient l'image et sa légende).
+    Ici, on recherche un <div> avec un style indiquant "text-align: center" (d’où provient l'image et sa légende).
     """
     images_list = []
     div_center = soup.find('div', style=lambda s: s and "text-align: center" in s)
@@ -150,7 +145,7 @@ def extract_images(soup):
         if img_tag:
             url = img_tag.get("src", "").strip()
             legende = ''
-            # Recherche d'une légende dans un span (par exemple class="style21")
+            # Recherche d'une légende dans un span (class="style21")
             caption_span = div_center.find('span', class_='style21')
             if caption_span:
                 legende = caption_span.get_text(strip=True)
@@ -164,7 +159,7 @@ def extract_contact(soup):
     le texte "Pour en savoir plus, contacts" et on récupère le contenu du <td> voisin.
     """
     contact = ''
-    contact_label = soup.find("span", class_="style28", text=re.compile("Pour en savoir plus, contacts", re.IGNORECASE))
+    contact_label = soup.find("span", class_="style28", string=re.compile("Pour en savoir plus, contacts", re.IGNORECASE))
     if contact_label:
         parent_tr = contact_label.find_parent("tr")
         if parent_tr:
@@ -241,7 +236,7 @@ def build_xml(bulletins):
 # ---------------------------
 
 def main():
-    bulletin_dir = "BULLETINS"  # Le dossier contenant les fichiers .htm
+    bulletin_dir = os.path.join("../data", "BULLETINS")  # The folder containing .htm files
     bulletin_files = glob.glob(os.path.join(bulletin_dir, "*.htm"))
     
     bulletins = []
@@ -251,7 +246,7 @@ def main():
         bulletins.append(bulletin_info)
 
     xml_tree = build_xml(bulletins)
-    output_file = "corpus3.xml"
+    output_file = os.path.join("..", "corpus3.xml")
     xml_tree.write(output_file, encoding="utf-8", xml_declaration=True)
     print(f"Le corpus XML a été généré dans {output_file}")
 

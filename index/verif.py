@@ -112,5 +112,5 @@ def verify_xml_file(xml_filename):
     return all_ok
 
 if __name__ == "__main__":
-    xml_filename = "corpus3.xml"
+    xml_filename = "../corpus3.xml"
     verify_xml_file(xml_filename)

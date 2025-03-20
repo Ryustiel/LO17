@@ -1,10 +1,12 @@
 
 from typing import (
     List,
+    Tuple,
     Optional,
 )
 from pydantic import Field
 from .base.xml_base_model import XMLBaseModel
+from .base.corpus_document import CorpusDocument
 from datetime import datetime
 
 
@@ -16,10 +18,14 @@ class Image(XMLBaseModel):
     legende: Optional[str] = Field(None, description="La légende affichée sous l'image.")
 
 
-class Document(XMLBaseModel):
+class Document(XMLBaseModel, CorpusDocument):
     """
     Represents the information that we are looking for in the provided documents.
     """
+    @property
+    def corps_fields(self) -> Tuple[str]:
+        return ("titre", "texte")
+
     numero: Optional[str] = Field(None,
         description="""
             Un nombre unique qui identifie la revue dans laquelle est apparu l'article.

@@ -3,7 +3,7 @@ from typing import (
     List,
 )
 from .base.process_client import FileProcessClient
-from ..transactions.document import Document
+from ..transactions import Document, Image
 
 from bs4 import BeautifulSoup
 from datetime import datetime

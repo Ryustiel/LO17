@@ -39,8 +39,8 @@ class CorpusDocument(BaseModel, ABC):
         """
         # TODO (Maybe) : Add a cache to store the result of this method.
         return "\n".join([getattr(self, field) for field in self.corps_fields])
-
-    def all_words(self) -> Dict[str, int]:
+    
+    def tokens(self) -> Dict[str, int]:
         """
         List all the words occurring in this document and the number of times they occurred.
 

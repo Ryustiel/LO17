@@ -4,7 +4,7 @@ from typing import (
     Optional,
 )
 from pydantic import Field
-from ._xml_base_model import XMLBaseModel
+from .base.xml_base_model import XMLBaseModel
 from datetime import datetime
 
 

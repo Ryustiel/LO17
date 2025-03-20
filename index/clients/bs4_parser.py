@@ -2,7 +2,7 @@
 from typing import (
     List,
 )
-from .process_client import FileProcessClient
+from .base.process_client import FileProcessClient
 from ..transactions.document import Document
 
 from bs4 import BeautifulSoup

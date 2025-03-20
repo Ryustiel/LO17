@@ -26,6 +26,11 @@ class Document(XMLBaseModel, CorpusDocument):
     def corps_fields(self) -> Tuple[str]:
         return ("titre", "texte")
 
+    fichier: Optional[str] = Field(None,
+        description="""
+            Le nom du fichier d'après le chemin fourni.
+        """
+    )
     numero: Optional[str] = Field(None,
         description="""
             Un nombre unique qui identifie la revue dans laquelle est apparu l'article.

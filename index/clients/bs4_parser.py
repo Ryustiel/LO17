@@ -6,6 +6,7 @@ from .base.process_client import FileProcessClient
 from ..transactions.document import Document
 
 from bs4 import BeautifulSoup
+from datetime import datetime
 import re
 
 

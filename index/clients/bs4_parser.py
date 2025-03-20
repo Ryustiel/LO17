@@ -1,9 +1,6 @@
-
-from typing import (
-    List,
-)
+import os
 from .base.process_client import FileProcessClient
-from ..transactions.document import Document
+from ..transactions.document import Document, Image
 
 from bs4 import BeautifulSoup
 from datetime import datetime
@@ -16,7 +13,7 @@ class BS4Parser(FileProcessClient[Document]):
     and build instances of Document models.
     """
 
-    def process(self, file: str) -> Document:
+    def process(self, file: str, path: str) -> Document:
 
         soup = BeautifulSoup(file, "html.parser")
 
@@ -113,6 +110,9 @@ class BS4Parser(FileProcessClient[Document]):
                     p_contact = contact_td.find("p", class_="style44")
                     if p_contact:
                         document.contact = p_contact.get_text(separator=" ", strip=True)
+
+        #Nom du fichier
+        document.fichier = os.path.basename(path)
 
         #Retourner le document
         return document

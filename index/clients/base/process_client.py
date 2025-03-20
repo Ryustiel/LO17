@@ -22,7 +22,7 @@ class FileProcessClient(Generic[DocumentModel]):
     """
 
     @abstractmethod
-    def process(self, file: str) -> DocumentModel:
+    def process(self, file: str, path: str) -> DocumentModel:
         """
         Extracts information from a file.
         """
@@ -33,7 +33,7 @@ class FileProcessClient(Generic[DocumentModel]):
         Process the document at the specified path.
         """
         with open(path, 'r', encoding='utf-8') as file:
-            return self.process(file.read())
+            return self.process(file.read(), path)
 
     def process_folder(self, folder_path: str, limit: Optional[int] = None) -> Dict[str, DocumentModel]:
         """

@@ -20,6 +20,11 @@ class Document(XMLBaseModel):
     """
     Represents the information that we are looking for in the provided documents.
     """
+    fichier: Optional[str] = Field(None,
+        description="""
+            Le nom du fichier d'après le chemin fourni.
+        """
+    )
     numero: Optional[str] = Field(None,
         description="""
             Un nombre unique qui identifie la revue dans laquelle est apparu l'article.

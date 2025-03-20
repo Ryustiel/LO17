@@ -9,6 +9,7 @@ from typing import (
 from pydantic import BaseModel, Field
 from datetime import datetime
 import xml.etree.ElementTree as ET
+from xml.dom import minidom
 
 
 class XMLBaseModel(BaseModel):
@@ -77,7 +78,25 @@ class XMLBaseModel(BaseModel):
         Returns:
             str: A valid XML string, encoded in utf-8.
         """
-        return ET.tostring(self.model_dump_xml(tag=tag), encoding="utf-8")
+        return ET.tostring(self.model_dump_xml(tag=tag), encoding="unicode")
+
+    def model_dump_xml_str_pretty(self, tag: Optional[str] = None, encoding: Literal["unicode", "utf-8"] = "utf-8") -> str:
+        """
+        Serializes the model instance to an XML string representation.
+
+        Args:
+            tag (Optional[str]):
+                The tag name for the root element; if not provided,
+                the class name is used.
+            encoding ("utf-8", "unicode"):
+                The encoding of the output string. Defaults to "utf-8".
+
+        Returns:
+            str: A valid XML string, encoded in utf-8.
+        """
+        rough_string = ET.tostring(self.model_dump_xml(tag=tag), 'utf-8')
+        reparsed = minidom.parseString(rough_string)
+        return reparsed.toprettyxml(indent="  ", encoding="utf-8").decode('utf-8')
 
     @classmethod
     def model_validate_xml(cls, xml_data: Union[bytes, str, ET.Element], encoding: Optional[str] = "utf-8") -> Self:

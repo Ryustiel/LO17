@@ -280,7 +280,7 @@ def main():
     xml_content = '\n'.join([line for line in xml_content.split('\n') if line.strip()])
 
     # Write to file
-    output_file = os.path.join("../..", "corpus3.xml")
+    output_file = os.path.join("", "corpus3.xml")
     with open(output_file, 'w', encoding='utf-8') as f:
         f.write(xml_content)
 

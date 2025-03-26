@@ -35,7 +35,7 @@ class FileProcessClient(Generic[DocumentModel]):
         with open(path, 'r', encoding='utf-8') as file:
             return self.process(file.read(), path)
 
-    def process_folder(self, folder_path: str, limit: Optional[int] = None) -> Dict[str, DocumentModel]:
+    def process_folder(self, folder_path: str, limit: Optional[int] = None) -> List[DocumentModel]:
         """
         Process all documents from the specified folder.
 

@@ -23,8 +23,8 @@ class Document(XMLBaseModel, CorpusDocument):
     Represents the information that we are looking for in the provided documents.
     """
     @property
-    def corps_fields(self) -> Tuple[str]:
-        return ("titre", "texte")
+    def corps_fields(self) -> Tuple[str,str]:
+        return "titre", "texte"
 
     fichier: Optional[str] = Field(None,
         description="""

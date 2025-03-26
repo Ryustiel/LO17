@@ -40,7 +40,7 @@ class XMLBaseModel(BaseModel):
             # Handle datetime values.
             if isinstance(value, datetime):
                 child = ET.SubElement(root, field_name)
-                child.text = value.isoformat()
+                child.text = value.strftime('%d/%m/%Y')
 
             # If the field is a nested model (assumed to be XMLBaseModel).
             elif isinstance(value, XMLBaseModel):

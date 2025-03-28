@@ -6,3 +6,4 @@ index/clients/base/__pycache__/
 /test.ipynb
 __pycache__/
 *.pyc
+./output/

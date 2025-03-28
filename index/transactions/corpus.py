@@ -13,17 +13,19 @@ import pandas as pd
 if TYPE_CHECKING:
     from ..clients import FileProcessClient
 
+from .document import Document
 from .base.xml_base_model import XMLBaseModel
 from .base.base_corpus import BaseCorpus
 from .modules.post_processing import CorpusPostProcessing
 from .modules.metrics import CorpusMetrics
-from .document import Document
+from .modules.nlp import CorpusNLP
 
 
 class Corpus(
     XMLBaseModel, 
     CorpusPostProcessing, 
     CorpusMetrics, 
+    CorpusNLP,
     BaseCorpus,  # Base class (bridges all the modules)
 ):
     """

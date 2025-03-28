@@ -11,9 +11,8 @@ class CorpusMetrics(BaseCorpus):
     """
     A couple methods to compute metrics on a corpus of documents.
     """
-    
     @property
-    def tokens(self) -> pd.DataFrame:
+    def token_by_doc(self) -> pd.DataFrame:
         """
         Result: 
             Une dataframe avec tous les tokens du corpus au format (mot, document_id).
@@ -24,7 +23,7 @@ class CorpusMetrics(BaseCorpus):
                 rows.append({'token': token, 'document_id': doc.document_id})
         
         return pd.DataFrame(rows, columns=['token', 'document_id'])
-
+    
 
     @property
     def term_frequencies(self) -> pd.DataFrame:

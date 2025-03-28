@@ -1,3 +1,6 @@
+"""
+Interfaces on external resources or libraries to call them and process them.
+"""
 
 from .bs4_parser import BS4Parser
-from .corpus_client import CorpusClient
+from .base.process_client import FileProcessClient

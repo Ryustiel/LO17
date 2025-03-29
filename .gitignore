@@ -10,3 +10,4 @@ __pycache__/
 /output/
 /uv.lock
 /data/backup/corpus3.xml
+/.idea/*

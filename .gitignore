@@ -6,3 +6,7 @@ index/clients/base/__pycache__/
 /test.ipynb
 __pycache__/
 *.pyc
+/index/nlp/output/
+/output/
+/uv.lock
+/data/backup/corpus3.xml

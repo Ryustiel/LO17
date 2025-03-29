@@ -1,4 +1,5 @@
 
+from functools import cached_property
 from typing import (
     List,
     Tuple,
@@ -6,7 +7,7 @@ from typing import (
 )
 from pydantic import Field
 from .base.xml_base_model import XMLBaseModel
-from .base.corpus_document import CorpusDocument
+from .base.base_document import BaseDocument
 from datetime import datetime
 
 
@@ -18,13 +19,18 @@ class Image(XMLBaseModel):
     legende: Optional[str] = Field(None, description="La légende affichée sous l'image.")
 
 
-class Document(XMLBaseModel, CorpusDocument):
+class Document(XMLBaseModel, BaseDocument):
     """
     Represents the information that we are looking for in the provided documents.
     """
-    @property
+    @cached_property
     def corps_fields(self) -> Tuple[str,str]:
         return "titre", "texte"
+    
+    @cached_property
+    def document_id(self) -> str:
+        if self.fichier is None: raise ValueError("Le document n'a pas d'attribut fichier.")
+        return self.fichier
 
     fichier: Optional[str] = Field(None,
         description="""

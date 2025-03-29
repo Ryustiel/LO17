@@ -1,1 +1,2 @@
-from index_builder import InvertedIndexBuilder
+
+from .get_spacy import get_spacy

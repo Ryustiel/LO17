@@ -29,7 +29,8 @@ class InteractiveLemmatizer:
         if not self.lexicon:
             print(f"Avertissement: Lexique vide ou non chargé depuis {lexicon_path}")
 
-    def _load_lexicon(self, filepath: str) -> Dict[str, str]:
+    @staticmethod
+    def _load_lexicon(filepath: str) -> Dict[str, str]:
         """Charge le lexique depuis un fichier TSV (mot<TAB>lemme)."""
         lexicon = {}
         try:
@@ -47,7 +48,8 @@ class InteractiveLemmatizer:
             print(f"Erreur lors du chargement du lexique depuis {filepath}: {e}")
         return lexicon
 
-    def _calculate_prefix_proximity(self, word1: str, word2: str) -> int:
+    @staticmethod
+    def _calculate_prefix_proximity(word1: str, word2: str) -> int:
         """
         Calcule le score de proximité basé sur le préfixe commun,
         conformément à l'algorithme du cours (Slide 21, Chap 3).
@@ -83,8 +85,8 @@ class InteractiveLemmatizer:
 
         return int(proximity_score)
 
-
-    def _calculate_levenshtein(self, s1: str, s2: str) -> int:
+    @staticmethod
+    def _calculate_levenshtein(s1: str, s2: str) -> int:
         """
         Calcule la distance de Levenshtein entre deux chaînes.
         Implémentation standard (Wagner-Fischer, Slide 28, Chap 3).

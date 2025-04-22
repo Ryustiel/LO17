@@ -26,7 +26,7 @@ except Exception as e:
 
 # --- Fonctions de base ---
 
-def get_spacy_lemma(word: str) -> str:
+def get_spacy_lemmas(word: str) -> str:
     """Retourne le lemme d'un mot en utilisant spaCy."""
     if not nlp_spacy or not word:
         return word # Retourne le mot original si spaCy n'est pas chargé ou le mot est vide
@@ -48,7 +48,7 @@ def get_snowball_stem(word: str) -> str:
 class LemmatizerComparer:
     """
     Compare spaCy et Snowball sur un corpus et génère des rapports.
-    Utilise les fonctions get_spacy_lemma et get_snowball_stem.
+    Utilise les fonctions get_spacy_lemmas et get_snowball_stem.
     """
     def __init__(self, documents: List['CorpusDocument']):
         """
@@ -97,7 +97,7 @@ class LemmatizerComparer:
         print("Génération des lemmes (spaCy) et racines (Snowball)...")
         total_words = len(words)
         for i, word in enumerate(words):
-            lemma = get_spacy_lemma(word)
+            lemma = get_spacy_lemmas(word)
             stem = get_snowball_stem(word)
             data.append({'mot': word, 'lemme_spacy': lemma, 'racine_snowball': stem})
             if (i + 1) % 500 == 0 or (i + 1) == total_words:
@@ -207,7 +207,7 @@ def get_normalizer(method: str) -> TextNormalizerFunc:
     """Retourne la fonction de normalisation appropriée ('spacy', 'snowball', ou 'none')."""
     if method == 'spacy':
         print("Utilisation de la lemmatisation spaCy pour l'indexation.")
-        return get_spacy_lemma
+        return get_spacy_lemmas
     elif method == 'snowball':
         print("Utilisation du stemming Snowball pour l'indexation.")
         return get_snowball_stem

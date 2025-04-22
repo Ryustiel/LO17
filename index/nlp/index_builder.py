@@ -39,7 +39,7 @@ class InvertedIndexBuilder:
 
         Args:
             corpus_client: Le client corpus contenant les documents (idéalement filtrés).
-            text_normalizer: La fonction à appliquer aux mots des champs texte (ex: get_spacy_lemma).
+            text_normalizer: La fonction à appliquer aux mots des champs texte (ex: get_spacy_lemmas).
             doc_id_field: L'attribut du document à utiliser comme ID.
         """
         self.client = corpus_client

@@ -19,10 +19,9 @@ class BaseDocument(BaseModel, ABC):
         """
         Reset all the cached properties of the document.
         """
-        del self.corps
-        del self.tokens
-        del self.document_id
-        del self.corps_fields
+        for attr in ("corps", "tokens", "document_id", "corps_fields"):
+            if hasattr(self, attr):
+                delattr(self, attr)
     
     @cached_property
     @abstractmethod

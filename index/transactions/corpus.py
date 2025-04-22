@@ -19,6 +19,7 @@ from .base.base_corpus import BaseCorpus
 from .modules.post_processing import CorpusPostProcessing
 from .modules.metrics import CorpusMetrics
 from .modules.nlp import CorpusNLP
+from .modules.indexing import CorpusIndex
 
 
 class Corpus(
@@ -26,6 +27,7 @@ class Corpus(
     CorpusPostProcessing, 
     CorpusMetrics, 
     CorpusNLP,
+    CorpusIndex,
     BaseCorpus,  # Base class (bridges all the modules)
 ):
     """
@@ -45,3 +47,12 @@ class Corpus(
         Charge un corpus depuis un dossier en utilisant un FileProcessClient.
         """
         return cls(documents = process_client.process_folder(folder_path=folder_path, limit=limit))
+    
+    def __getitem__(self, index: int) -> Document:
+        """
+        Permet d'accéder à un document par son index.
+        """
+        for doc in self.documents:
+            if doc.document_id == index:
+                return doc
+        raise IndexError("Document not found in the corpus.")

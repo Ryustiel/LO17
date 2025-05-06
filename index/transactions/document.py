@@ -1,14 +1,13 @@
 
-from functools import cached_property
-from typing import (
-    List,
-    Tuple,
-    Optional,
-)
+from typing import List, Dict, Tuple, Optional, Callable
+from datetime import datetime
 from pydantic import Field
+
+import re
+from functools import cached_property
+
 from .base.xml_base_model import XMLBaseModel
 from .base.base_document import BaseDocument
-from datetime import datetime
 
 
 class Image(XMLBaseModel):
@@ -22,10 +21,15 @@ class Image(XMLBaseModel):
 class Document(XMLBaseModel, BaseDocument):
     """
     Represents the information that we are looking for in the provided documents.
-    """
+    """    
     @cached_property
-    def corps_fields(self) -> Tuple[str,str]:
-        return "titre", "texte"
+    def zones(self):
+        zones: Dict[str, Callable[["Document"], str]] = {
+            "titre": lambda doc: doc.titre or "",
+            "texte": lambda doc: doc.texte or "",
+            "legendes": lambda doc: "".join([img.legende or "" for img in doc.images]),
+        }
+        return zones
     
     @cached_property
     def document_id(self) -> str:
@@ -94,3 +98,24 @@ class Document(XMLBaseModel, BaseDocument):
             dans l'ordre d'apparition.
         """
     )
+    
+    @cached_property
+    def tokens(self) -> Dict[str, Dict[str, int]]:
+        """
+        List all the words occurring in this document's fields and the number of times they occurred.
+        Returns:
+            A dictionary of field keys mapped to a dictionary of words and their counts.
+        """
+        tokens = {}
+        
+        for zone_name, zone_content in self.read_zones.items():
+        
+            word_counts = {}
+            # Utilise \w+, trouve directement toutes les séquences alphanumériques
+            for word in re.findall(r"\w+", zone_content):
+                cleaned_lower = word.lower()  # Met en minuscule
+                word_counts[cleaned_lower] = word_counts.get(cleaned_lower, 0) + 1
+            
+            tokens[zone_name] = word_counts
+        
+        return tokens

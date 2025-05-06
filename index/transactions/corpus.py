@@ -17,16 +17,12 @@ from .document import Document
 from .base.xml_base_model import XMLBaseModel
 from .base.base_corpus import BaseCorpus
 from .modules.post_processing import CorpusPostProcessing
-from .modules.metrics import CorpusMetrics
-from .modules.nlp import CorpusNLP
 from .modules.indexing import CorpusIndex
 
 
 class Corpus(
     XMLBaseModel, 
     CorpusPostProcessing, 
-    CorpusMetrics, 
-    CorpusNLP,
     CorpusIndex,
     BaseCorpus,  # Base class (bridges all the modules)
 ):

@@ -1,10 +1,5 @@
 from functools import cached_property
-from typing import (
-    Any,
-    List,
-    Dict,
-    Tuple,
-)
+from typing import Any, Dict, Tuple, Callable
 from abc import abstractmethod, ABC
 from pydantic import BaseModel
 
@@ -19,15 +14,15 @@ class BaseDocument(BaseModel, ABC):
         """
         Reset all the cached properties of the document.
         """
-        for attr in ("corps", "tokens", "document_id", "corps_fields"):
+        for attr in ("tokens", "document_id", "read_zones"):
             if hasattr(self, attr):
                 delattr(self, attr)
     
     @cached_property
     @abstractmethod
-    def corps_fields(self) -> Tuple[str]:
+    def zones(self) -> Dict[str, Callable[["BaseDocument"], str]]:
         """
-        The fields that make up the "corps" of the document.
+        The fields that make up the "zones" of the document.
         """
         pass
     
@@ -38,30 +33,20 @@ class BaseDocument(BaseModel, ABC):
         A unique identifier for the document.
         """
         raise NotImplemented
-
-    @cached_property
-    def corps(self) -> str:
-        """
-        A string representing the "semantic" component of the document.
-        This will be used to represent the contents of the document and build an index.
-
-        In the context of this project, it is the title and main body of the Document object, 
-        but it could be something else.
-        """
-        # TODO (Maybe) : Add a cache to store the result of this method.
-        return "\n".join([getattr(self, field, "") or "" for field in self.corps_fields])
     
     @cached_property
-    def tokens(self) -> Dict[str, int]:
+    @abstractmethod
+    def tokens(self) -> Dict[str, Dict[str, int]]:
         """
-        List all the words occurring in this document and the number of times they occurred.
-
+        List all the words occurring in this document's fields and the number of times they occurred.
         Returns:
-            A dictionary of words and their counts.
+            A dictionary of field keys mapped to a dictionary of words and their counts.
         """
-        word_counts = {}
-        # Utilise \w+, trouve directement toutes les séquences alphanumériques
-        for word in re.findall(r"\w+", self.corps):
-            cleaned_lower = word.lower()  # Met en minuscule
-            word_counts[cleaned_lower] = word_counts.get(cleaned_lower, 0) + 1
-        return word_counts
+        pass
+
+    @cached_property
+    def read_zones(self) -> Dict[str, str]:
+        """
+        Returns the fields of the document as a dictionary.
+        """
+        return {key: func(self) for key, func in self.zones.items()}

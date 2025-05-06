@@ -237,14 +237,14 @@ if __name__ == "__main__":
 
     # **ÉTAPE 2 : UTILISATION DU LEXIQUE COMPLET (après tests)**
     # Décommenter ces lignes pour utiliser le lexique généré au TD4
-    # LEXICON_PATH_TD4 = "output/lemma_comparison/lemma_comparison_spacy.tsv" # ou _snowball.tsv
-    # print(f"\n--- Utilisation du lexique complet ({LEXICON_PATH_TD4}) ---")
-    # if os.path.exists(LEXICON_PATH_TD4):
-    #      lemmatizer = InteractiveLemmatizer(LEXICON_PATH_TD4)
-    # else:
-    #      print(f"Erreur: Le fichier lexique {LEXICON_PATH_TD4} n'a pas été trouvé.")
-    #      print("Assurez-vous d'avoir exécuté le TD4 et que le chemin est correct.")
-    #      # L'exécution continue avec le lemmatiseur de test si le fichier complet n'est pas trouvé
+    LEXICON_PATH_TD4 = "output/lemma_comparison/lemma_comparison_spacy.tsv" # ou _snowball.tsv
+    print(f"\n--- Utilisation du lexique complet ({LEXICON_PATH_TD4}) ---")
+    if os.path.exists(LEXICON_PATH_TD4):
+         lemmatizer = InteractiveLemmatizer(LEXICON_PATH_TD4)
+    else:
+         print(f"Erreur: Le fichier lexique {LEXICON_PATH_TD4} n'a pas été trouvé.")
+         print("Assurez-vous d'avoir exécuté le TD4 et que le chemin est correct.")
+         # L'exécution continue avec le lemmatiseur de test si le fichier complet n'est pas trouvé
 
     print("\nEntrez une phrase à analyser (ou 'quit' pour quitter).")
     while True:

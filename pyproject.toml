@@ -17,4 +17,6 @@ dependencies = [
     "streamlit>=1.45.0",
     "langchain-openai>=0.3.16",
     "openai>=1.78.1",
+    "python-dotenv>=1.1.0",
+    "ipykernel>=6.29.5",
 ]

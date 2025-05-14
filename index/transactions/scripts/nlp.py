@@ -13,7 +13,7 @@ def spacy_lemmatize(text: str) -> List[str]:
     Returns:
         List[str]: List of lemmatized words.
     """
-    from ...nlp import get_spacy
+    from .get_spacy import get_spacy
     nlp = get_spacy("fr_core_news_sm")
     doc = nlp(text)
     return [token.lemma_ for token in doc if token.is_alpha]
@@ -42,7 +42,7 @@ def spacy_lemmas(tokens: List[str]) -> pandas.DataFrame:
     Returns:
         pandas.DataFrame: DataFrame with columns ['word', 'stem'] where 'stem' is the spaCy lemma.
     """
-    from ...nlp import get_spacy
+    from .get_spacy import get_spacy
     nlp = get_spacy("fr_core_news_sm")
     words = {w for w in tokens if w.isalpha()}
     mapping = {word: doc[0].lemma_ for word, doc in zip(words, nlp.pipe(words)) if word.isalpha()}

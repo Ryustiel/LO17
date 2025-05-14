@@ -8,7 +8,7 @@ from datetime import datetime
 # Importations depuis la structure de projet
 from index.transactions.corpus import Corpus  # Remplacer CorpusClient par Corpus
 from index.transactions.document import Document, Image
-from index.nlp.nlp_tools import TextNormalizerFunc  # Type de la fonction de normalisation
+from data.backup.nlp_tools import TextNormalizerFunc  # Type de la fonction de normalisation
 
 # Type alias pour la structure interne de l'index
 # self.indexes = { 'index_nom': { term: { doc_id: frequency } } }

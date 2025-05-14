@@ -7,9 +7,9 @@ from typing import List
 from index.clients.bs4_parser import BS4Parser
 from index.transactions.document import Document
 from index.transactions.corpus import Corpus
-from index.nlp import nlp_tools  # Importer le module pour vérifier nlp_spacy
-from index.nlp.nlp_tools import LemmatizerComparer, get_normalizer
-from index.nlp.index_builder import InvertedIndexBuilder
+from data.backup import nlp_tools  # Importer le module pour vérifier nlp_spacy
+from data.backup.nlp_tools import LemmatizerComparer, get_normalizer
+from data.backup.index_builder import InvertedIndexBuilder
 
 # --- Configuration ---
 # Utiliser des chemins relatifs par rapport à l'emplacement de ce script,

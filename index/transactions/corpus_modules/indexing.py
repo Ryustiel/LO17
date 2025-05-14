@@ -4,13 +4,13 @@ from typing import List, Dict, Optional
 import pandas
 
 from ..base.base_corpus import BaseCorpus
-from ..scripts.inverted_index import InvertedIndex
-from ..scripts.token_metrics import TokenMetrics
+from ..base.inverted_index import InvertedIndex
+from ..base.token_metrics import TokenMetrics
 
 
 class CorpusIndex(BaseCorpus):
     """
-    A couple methods to compute metrics on a corpus of documents.
+    A couple methods to compute metrics and indexes on a corpus of documents.
     """
 
     def tokens(self, zones: Optional[List[str]] = None) -> Dict[str, int]:

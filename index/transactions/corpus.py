@@ -16,8 +16,8 @@ if TYPE_CHECKING:
 from .document import Document
 from .base.xml_base_model import XMLBaseModel
 from .base.base_corpus import BaseCorpus
-from .modules.post_processing import CorpusPostProcessing
-from .modules.indexing import CorpusIndex
+from .corpus_modules.post_processing import CorpusPostProcessing
+from .corpus_modules.indexing import CorpusIndex
 
 
 class Corpus(
@@ -44,7 +44,7 @@ class Corpus(
         """
         return cls(documents = process_client.process_folder(folder_path=folder_path, limit=limit))
     
-    def __getitem__(self, index: int) -> Document:
+    def __getitem__(self, index: str) -> Document:
         """
         Permet d'accéder à un document par son index.
         """

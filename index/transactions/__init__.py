@@ -8,6 +8,8 @@ from .base.xml_base_model import XMLBaseModel
 from .scripts.inverted_index import InvertedIndex
 from .scripts.token_metrics import TokenMetrics
 from .scripts.nlp import spacy_lemmas, spacy_lemmatize, snowball_stem, snowball_stems
+from .scripts.correction import lemmatize_tokens
+from .scripts.requetes import parse_query
 
 from .document import Document, Image
 from .corpus import Corpus

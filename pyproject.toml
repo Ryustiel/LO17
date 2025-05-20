@@ -19,4 +19,6 @@ dependencies = [
     "openai>=1.78.1",
     "python-dotenv>=1.1.0",
     "ipykernel>=6.29.5",
+    "seaborn>=0.13.2",
+    "matplotlib>=3.10.3",
 ]

@@ -66,8 +66,8 @@ class Query(BaseQuery):
         from dotenv import load_dotenv
         import os
         load_dotenv()
-
-        LLM_FUNCTION = (
+        
+        validated_pydantic: "Query" = (
             PromptTemplate(
                 template = """
                     Instruction: Analyse la requête utilisateur suivante pour interroger une archive d'articles nommée ADIT. Extrais les critères de recherche pertinents.
@@ -96,14 +96,14 @@ class Query(BaseQuery):
                 model="mistral-small3.1:latest", 
                 api_key=os.getenv("UTC_API_KEY")
             ).with_structured_output(cls)
+        ).invoke(
+            {"query": query}
         )
-        
-        validated_pydantic: "Query" = LLM_FUNCTION.invoke({"query": query})
         return validated_pydantic
     
     # ========== SEARCH ==========
     
-    def search(self, documents: Dict[str, Document], index: Dict[str, InvertedIndex]) -> List[Document]:
+    def search(self, documents: Dict[str, Document], index: Dict[str, InvertedIndex], debug=False) -> List[Document]:
         
         results: Set[str] = set()
         
@@ -126,29 +126,39 @@ class Query(BaseQuery):
                 results.difference_update(
                     index["texte"].find_docs([keyword])
                 )
+                
+        if self.title_contains:
+            results.intersection_update(
+                index["titre"].find_docs(self.title_contains)
+            )
 
         for doc_id in results.copy():
             
             if self.has_image and not documents[doc_id].images:
                 results.remove(doc_id)
+                if debug: print("Removed", doc_id, "no image")
+                continue
             
             if self.rubriques:
-                if not any(rubrique in documents[doc_id].rubrique for rubrique in self.rubriques):
+                if not any(rubrique in documents[doc_id].rubrique.lower() for rubrique in self.rubriques):
                     results.remove(doc_id)
+                    if debug: print("Removed", doc_id, "rubrique is not required")
+                    continue
 
-            if any(rubrique in documents[doc_id].rubrique for rubrique in self.excluded_rubriques):
+            if any(rubrique in documents[doc_id].rubrique.lower() for rubrique in self.excluded_rubriques):
                 results.remove(doc_id)
-                
-            if self.title_contains:
-                results.update(
-                    index["titre"].find_docs(self.title_contains)
-                )
+                if debug: print("Removed", doc_id, "rubrique is excluded")
+                continue
                 
             if self.date_start and documents[doc_id].date.astimezone(self.date_start.tzinfo) < self.date_start:
                 results.remove(doc_id)
+                if debug: print("Removed", doc_id, "too old")
+                continue
                 
             if self.date_end and documents[doc_id].date.astimezone(self.date_end.tzinfo) > self.date_end:
                 results.remove(doc_id)
+                if debug: print("Removed", doc_id, "too recent")
+                continue
                 
             if self.excluded_date_periods:
                 for period in self.excluded_date_periods:
@@ -163,8 +173,9 @@ class Query(BaseQuery):
                     # Contrairement aux tests precedents, pas besoin de timezone (dates au format YYYY-MM-DD)
                     if documents[doc_id].date >= start and documents[doc_id].date <= end:
                         results.remove(doc_id)
-                
-            # XXX : Target info ignored
+                        print("Removed", doc_id, "not in time period", start, end)
+                        continue
             
+            # XXX : Target info ignored
+        
         return [documents[doc_id] for doc_id in results]
-                

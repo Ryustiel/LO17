@@ -35,8 +35,8 @@ class InvertedIndex(dict):  # Dict[str, List[str]]  token: List[document_ids]
         """
         index = cls()
         for _, row in df.iterrows():
-            token = row[0]
-            doc_ids = [str(id) for id in row[1:] if not pandas.isna(id)]
+            token = row.iloc[0]
+            doc_ids = [str(id) for id in row.iloc[1:] if not pandas.isna(id)]
             index[token] = doc_ids
             
         return index

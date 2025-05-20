@@ -106,7 +106,7 @@ class CorpusPostProcessing(BaseCorpus):
     
     def apply_filter(self, attributes: List[str], filter: Callable[[str], str]) -> None:
         """
-        Applique strip et lowercase sur les attributs spécifiés de chaque document.
+        Applique la fonction "filter" sur les attributs spécifiés de chaque document.
         
         Parameters:
             attributes: Liste des noms d'attributs à traiter (formuler "attr1.attr2" pour les attributs de type List[Other])

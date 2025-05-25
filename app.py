@@ -288,21 +288,52 @@ if submitted:
         st.toast("Veuillez entrer des termes de recherche.", icon="ℹ️")
     else:
         with st.spinner(f"Recherche de '{st.session_state.search_query}'..."):
-            st.session_state.search_results = [
-                SearchResult(document=d, snippets=generate_snippets(d.texte, st.session_state.build_query.content_terms if st.session_state.build_query.content_terms else st.session_state.search_query.lower()))
-                for d in recherche_lemma_ia(st.session_state.search_query)
-            ]
+            # 1) Lancement de la recherche brute
+            raw_results = recherche_lemma_ia(st.session_state.search_query)
+
+            # 2) Si la recherche renvoie une liste de chaînes, on les stocke séparément
+            if raw_results and isinstance(raw_results[0], str):
+                st.session_state.search_string_results = raw_results
+                st.session_state.search_results = []
+            else:
+                st.session_state.search_string_results = []
+                # 3) Sinon on convertit en SearchResult pour l'affichage classique
+                st.session_state.search_results = [
+                    SearchResult(
+                        document=d,
+                        snippets=generate_snippets(
+                            d.texte,
+                            st.session_state.build_query.content_terms
+                            if st.session_state.build_query.content_terms
+                            else st.session_state.search_query.lower(),
+                        ),
+                    )
+                    for d in raw_results
+                ]
             # XXX Formerly : search_documents_enhanced(st.session_state.search_query, corpus_data)
 
-        num_results = len(st.session_state.search_results)
-        if num_results > 0:
-            st.toast(f"{num_results} document{'s' if num_results > 1 else ''} trouvé{'s' if num_results > 1 else ''} !", icon="✅")
+        # Toast selon le type de résultat
+        if st.session_state.search_string_results:
+            st.toast(f"{len(st.session_state.search_string_results)} chaîne(s) brute(s) obtenue(s).", icon="ℹ️")
         else:
-            st.toast("Aucun document correspondant.", icon="🤷")
+            num_results = len(st.session_state.search_results)
+            if num_results > 0:
+                st.toast(
+                    f"{num_results} document{'s' if num_results > 1 else ''} trouvé{'s' if num_results > 1 else ''} !",
+                    icon="✅")
+            else:
+                st.toast("Aucun document correspondant.", icon="🤷")
 
 # Affichage des résultats et options de tri (si une recherche a été effectuée et qu'une requête existe).
 if st.session_state.search_performed and st.session_state.search_query:
-    if st.session_state.search_results:
+    # 1) Affichage de la liste brute de chaînes si présente
+    if st.session_state.search_string_results:
+        count_str = len(st.session_state.search_string_results)
+        st.header(f"Résultats bruts pour “{st.session_state.search_query}” ({count_str})")
+        for s in st.session_state.search_string_results:
+            st.markdown(f"- `{s}`")
+    # 2) Sinon affichage normal des documents
+    elif st.session_state.search_results:
         # Options de tri.
         sort_options = ["Pertinence", "Date (plus récent d'abord)", "Date (plus ancien d'abord)"]
         st.radio(

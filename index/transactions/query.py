@@ -422,7 +422,7 @@ class Query(BaseQuery):
                 doc = documents.get(doc_id)
                 if not doc or not doc.rubrique:
                     continue
-                doc_rubric_lower = doc.rubric.lower()
+                doc_rubric_lower = doc.rubrique.lower()
                 if any(neg_term in doc_rubric_lower for neg_term in query_neg_rubrics_lower):
                     ids_to_exclude.add(doc_id)
             candidate_doc_ids.difference_update(ids_to_exclude)

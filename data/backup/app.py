@@ -31,31 +31,66 @@ class SearchResult:
 
 # --- Fonctions de simulation du backend ---
 
-from index import Corpus, InvertedIndex
-from typing import Dict
-
-@st.cache_resource
-def load_corpus() -> Corpus:
-    import os
-    with open(os.path.join(os.getcwd(), "output", "corpus_initial.xml"), "r", encoding="utf-8") as f:
-        corpus = Corpus.model_validate_xml(
-            f.read(), 
-            tags={"Corpus": "corpus", "documents": "bulletins", "Document": "bulletin", "Image": "image"}
+@st.cache_resource  # Met en cache le corpus pour optimiser les chargements répétés.
+def load_dummy_corpus() -> Corpus:
+    """Charge un ensemble de documents factices pour la démonstration."""
+    docs = [
+        Document(
+            fichier="doc1.html",
+            numero="101",
+            date=datetime(2023, 1, 15),
+            rubrique="Technologie",
+            titre="L'Avenir de l'Intelligence Artificielle",
+            auteur="Dr. Ada Lovelace",
+            contact="ada@example.com",
+            texte="L'intelligence artificielle (IA) progresse à pas de géant. Cet article explore les implications futures de l'IA dans divers secteurs, de la santé à l'éducation. Nous discutons des avancées récentes en apprentissage profond et en traitement du langage naturel. L'IA est un sujet passionnant.",
+            images=[
+                Image(url="https://via.placeholder.com/300x200.png?text=Robot+Futuriste",
+                      legende="Un robot symbolisant l'IA."),
+                Image(url="https://via.placeholder.com/300x200.png?text=Réseau+Neuronal",
+                      legende="Visualisation d'un réseau de neurones.")
+            ]
+        ),
+        Document(
+            fichier="doc2.html",
+            numero="102",
+            date=datetime(2023, 2, 20),
+            rubrique="Science",
+            titre="Découvertes Récentes sur Mars et la vie",
+            auteur="Dr. Carl Sagan Jr.",
+            contact="carl.sagan.jr@example.com, Tel: 123-456-7890",
+            texte="De nouvelles données envoyées par les rovers martiens suggèrent la présence passée d'eau liquide en abondance sur Mars. Ces découvertes relancent le débat sur la possibilité de vie extraterrestre. L'analyse des roches sédimentaires est au coeur de ces recherches sur Mars.",
+            images=[
+                Image(url="https://via.placeholder.com/300x200.png?text=Surface+de+Mars",
+                      legende="Paysage martien capturé par un rover.")
+            ]
+        ),
+        Document(
+            fichier="doc3.txt",
+            numero="103",
+            date=datetime(2023, 3, 10),
+            rubrique="Économie",
+            titre="L'Impact des Cryptomonnaies et de la Blockchain",
+            auteur="Prof. Satoshi Nakamoto III",
+            texte="Les cryptomonnaies continuent de façonner le paysage financier mondial. Leur volatilité et les questions réglementaires restent des défis majeurs. Cet article analyse les tendances et les prédictions pour l'année à venir. Bitcoin et Ethereum sont au centre de l'attention. La technologie Blockchain sous-jacente a aussi un fort impact.",
+            images=[]
+        ),
+        Document(
+            fichier="doc4.html",
+            numero="104",
+            date=datetime(2023, 4, 5),
+            rubrique="Technologie",
+            titre="Streamlit: Créer des applications web interactives en Python pour l'IA",
+            auteur="Adrien Treuille",
+            contact="info@streamlit.io",
+            texte="Streamlit est un framework open-source qui permet de créer et de partager facilement de belles applications web personnalisées pour le machine learning et la data science, le tout en Python. Pas besoin de compétences en frontend ! L'Intelligence Artificielle (IA) peut bénéficier de ces outils pour la visualisation.",
+            images=[
+                Image(url="https://via.placeholder.com/300x200.png?text=Streamlit+Logo", legende="Logo de Streamlit")
+            ]
         )
-    return corpus
-    
-@st.cache_resource
-def load_index() -> Dict[str, InvertedIndex]:
-    import os, pandas
-    index: Dict[str, InvertedIndex] = {}
-    for zone in ["texte", "legendes", "titre"]:
-        index[zone] = InvertedIndex.from_dataframe(pandas.read_csv(os.path.join(os.getcwd(), "output", "index_files", f"index_{zone}_lemmatized.xml"), sep="\t", encoding="utf-8"))
-    return index
+    ]
+    return Corpus(documents=docs)
 
-@st.cache_resource
-def load_substitutions() -> Dict[str, str]:
-    import pandas, os
-    return pandas.read_csv(os.path.join(os.getcwd(), "output", "lemmatized_replacement.tsv"), sep="\t", encoding="utf-8", index_col=0, header=None).to_dict()[1]
 
 def generate_snippets(text: Optional[str], query: str, window_chars: int = 70, max_snippets: int = 3) -> List[str]:
     """
@@ -235,28 +270,7 @@ if "current_query_input" not in st.session_state:
     st.session_state.current_query_input = st.session_state.search_query
 
 # --- Chargement des données ---
-CORPUS = load_corpus() # Charge le corpus au démarrage de l'application.
-INDEX = load_index() # Charge l'index au démarrage de l'application.
-SUBSTITUTIONS = load_substitutions() # Charge les substitutions de lemmatisation.
-
-# --- Préparation des pipelines de lemmatisation ---
-from typing import Callable, List
-from index import Query, Corpus, InvertedIndex
-
-STANDARDIZE: Callable[[str], str] = lambda x: re.sub(r"[^\w\s]", "", re.sub(r"'", " ", x.strip().lower()))
-TOKENIZE_LEMMATIZE: Callable[[List[str]], List[str]] = lambda x: SUBSTITUTIONS.get(STANDARDIZE(x), STANDARDIZE(x))
-
-def APPLY(q: Query, func: callable, fields: List[str]) -> Query:
-    """Apply a function to the tokens in specified fields of a Query object."""
-    for field in fields:
-        setattr(q, field, [func(token) for token in getattr(q, field)] if isinstance(getattr(q, field), list) else func(getattr(q, field)))
-    return q
-
-def recherche_lemma_ia(query: str) -> List[Document]:
-    q = Query.llm_build(query)
-    APPLY(q, TOKENIZE_LEMMATIZE, ["keywords", "excluded_keywords", "title_contains"])
-    APPLY(q, STANDARDIZE, ["rubriques", "excluded_rubriques"])
-    return q.search(documents={d.document_id: d for d in CORPUS.documents}, index=INDEX)
+corpus_data = load_dummy_corpus() # Charge le corpus au démarrage de l'application.
 
 # --- Interface principale de l'application ---
 st.title("📚 Moteur de Recherche de Documents LO17")
@@ -282,11 +296,7 @@ if submitted:
         st.toast("Veuillez entrer des termes de recherche.", icon="ℹ️")
     else:
         with st.spinner(f"Recherche de '{st.session_state.search_query}'..."):
-            st.session_state.search_results = [
-                SearchResult(document=d, snippets=generate_snippets(d.texte, st.session_state.search_query.lower())) 
-                for d in recherche_lemma_ia(st.session_state.search_query)
-            ]
-            # XXX Formerly : search_documents_enhanced(st.session_state.search_query, corpus_data)
+            st.session_state.search_results = search_documents_enhanced(st.session_state.search_query, corpus_data)
 
         num_results = len(st.session_state.search_results)
         if num_results > 0:

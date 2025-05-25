@@ -1,11 +1,11 @@
 import streamlit as st
 import time
-from typing import List, Optional
+from typing import List, Optional, Union
 from datetime import datetime
-from index.transactions.document import Document, Image
-from index.transactions.corpus import Corpus
+from index.transactions.document import Document
 from dataclasses import dataclass, field
 import re
+import copy
 
 
 # --- Modèles de données ---
@@ -57,23 +57,25 @@ def load_substitutions() -> Dict[str, str]:
     import pandas, os
     return pandas.read_csv(os.path.join(os.getcwd(), "output", "lemmatized_replacement.tsv"), sep="\t", encoding="utf-8", index_col=0, header=None).to_dict()[1]
 
-def generate_snippets(text: Optional[str], query: str, window_chars: int = 70, max_snippets: int = 3) -> List[str]:
+def generate_snippets(text: Union[Optional[str],List[str]], queries: Union[str, List[str]], window_chars: int = 70, max_snippets: int = 3) -> List[str]:
     """
     Génère des extraits de texte (snippets) autour des occurrences d'un terme de recherche.
     Le terme recherché est mis en évidence en gras (Markdown).
     """
-    if not text or not query:
+
+    if not text or not queries:
         return []
+
+    if isinstance(queries, str):
+        term_list = [queries]
+    else:
+        term_list = [q for q in queries if q]
 
     snippets = []
     text_lower = text.lower()
-    query_lower = query.lower()
-
-    # Échappe les caractères spéciaux dans la requête pour une utilisation sûre avec regex.
-    try:
-        pattern = re.compile(re.escape(query_lower), re.IGNORECASE)
-    except re.error:
-        return [] # Retourne une liste vide si la requête n'est pas une regex valide.
+    # Créé une regex qui matche n'importe quel des termes de la liste
+    escaped_terms = [re.escape(term.lower()) for term in term_list if term]
+    pattern = re.compile(r'(' + '|'.join(escaped_terms) + r')', re.IGNORECASE)
 
     for match in pattern.finditer(text_lower):
         if len(snippets) >= max_snippets:
@@ -233,6 +235,9 @@ if "sort_by" not in st.session_state:
 if "current_query_input" not in st.session_state:
     # Contenu actuel du champ de texte de recherche
     st.session_state.current_query_input = st.session_state.search_query
+if "build_query" not in st.session_state:
+    # Contenu actuel du champ de texte de recherche
+    st.session_state.build_query = None
 
 # --- Chargement des données ---
 CORPUS = load_corpus() # Charge le corpus au démarrage de l'application.
@@ -240,7 +245,7 @@ INDEX = load_index() # Charge l'index au démarrage de l'application.
 SUBSTITUTIONS = load_substitutions() # Charge les substitutions de lemmatisation.
 
 # --- Préparation des pipelines de lemmatisation ---
-from typing import Callable, List
+from typing import Callable
 from index import Query, Corpus, InvertedIndex
 
 STANDARDIZE: Callable[[str], str] = lambda x: re.sub(r"[^\w\s]", "", re.sub(r"'", " ", x.strip().lower()))
@@ -253,9 +258,10 @@ def APPLY(q: Query, func: callable, fields: List[str]) -> Query:
     return q
 
 def recherche_lemma_ia(query: str) -> List[Document]:
-    q = Query.llm_build(query)
-    APPLY(q, TOKENIZE_LEMMATIZE, ["keywords", "excluded_keywords", "title_contains"])
-    APPLY(q, STANDARDIZE, ["rubriques", "excluded_rubriques"])
+    q = Query.build(query)
+    st.session_state.build_query = copy.deepcopy(q)  # Stocke la requête pour l'affichage des snippets.
+    APPLY(q, TOKENIZE_LEMMATIZE, ["content_terms", "negated_content_terms", "title_terms"])
+    APPLY(q, STANDARDIZE, ["rubric_terms", "negated_rubric_terms"])
     return q.search(documents={d.document_id: d for d in CORPUS.documents}, index=INDEX)
 
 # --- Interface principale de l'application ---
@@ -283,7 +289,7 @@ if submitted:
     else:
         with st.spinner(f"Recherche de '{st.session_state.search_query}'..."):
             st.session_state.search_results = [
-                SearchResult(document=d, snippets=generate_snippets(d.texte, st.session_state.search_query.lower())) 
+                SearchResult(document=d, snippets=generate_snippets(d.texte, st.session_state.build_query.content_terms if st.session_state.build_query.content_terms else st.session_state.search_query.lower()))
                 for d in recherche_lemma_ia(st.session_state.search_query)
             ]
             # XXX Formerly : search_documents_enhanced(st.session_state.search_query, corpus_data)

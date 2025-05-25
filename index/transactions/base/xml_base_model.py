@@ -40,7 +40,7 @@ class XMLBaseModel(BaseModel):
             
         root = ET.Element(tag)
         for field_name in self.model_dump().keys():
-            value = self.model_dump()[field_name]
+            value = getattr(self, field_name)
             if value is None:
                 continue
 

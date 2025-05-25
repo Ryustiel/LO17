@@ -53,8 +53,3 @@ class Corpus(
                 return doc
         raise IndexError("Document not found in the corpus.")
     
-    def __dict__(self) -> Dict[str, Document]:
-        """
-        Retourne un dictionnaire des documents du corpus.
-        """
-        return {doc.document_id: doc for doc in self.documents}

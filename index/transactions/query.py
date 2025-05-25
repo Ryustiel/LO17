@@ -280,9 +280,24 @@ class Query(BaseQuery):
         if not terms:
             return all_doc_ids_in_corpus
 
-        field_idx = index.get(field_name)
+        field_idx: Optional[InvertedIndex] = None
+        actual_field_name_used = field_name
+
+        if field_name == 'content':
+            field_idx = index.get('content')
+            if not field_idx:
+                field_idx = index.get('texte')
+                if field_idx: actual_field_name_used = 'texte'
+        elif field_name == 'title':
+            field_idx = index.get('title')
+            if not field_idx:
+                field_idx = index.get('titre')
+                if field_idx: actual_field_name_used = 'titre'
+        else:
+            field_idx = index.get(field_name)
+
         if not field_idx:
-            if debug: print(f"Search_Helper: Index for field '{field_name}' not found. No results for this criterion.")
+            if debug: print(f"Search_Helper: Index for field '{field_name}' (tried '{actual_field_name_used}') not found. No results for this criterion.")
             return set()
 
         effective_operator = operator
@@ -390,6 +405,8 @@ class Query(BaseQuery):
         if self.negated_content_terms:
             ids_to_exclude = set()
             neg_content_idx = index.get('content')
+            if not neg_content_idx: # <--- AJOUT DE CETTE VÉRIFICATION ET FALLBACK
+                neg_content_idx = index.get('texte')
             if neg_content_idx:
                 for neg_expression in self.negated_content_terms:
                     sub_terms = [st.lower() for st in neg_expression.split()]

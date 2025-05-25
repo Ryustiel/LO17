@@ -1,3 +1,8 @@
+"""
+Un analyseur de requêtes en langage naturel (français) pour extraire des informations structurées.
+Basé sur du regex pour respecter les exemples de queries fournies en TD.
+"""
+
 import re
 from datetime import datetime
 

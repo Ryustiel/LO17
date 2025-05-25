@@ -1,7 +1,7 @@
 # traitements_requetes_unit.py
 import unittest
 import json
-from traitement_requetes import QueryParser
+from index.transactions.scripts.query_parser import QueryParser
 
 
 class TestProcessQuery(unittest.TestCase):

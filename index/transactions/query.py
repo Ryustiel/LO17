@@ -57,49 +57,51 @@ class Query(BaseQuery):
     )
 
     # ========== BUILD ==========
-
+    
     @classmethod
     def build(cls, query: str) -> 'Query':
+        from .scripts.query_parser import QueryParser
+        query_json: dict = QueryParser().process_query(query)
+        return cls.model_validate(query_json)
+
+    @classmethod
+    def llm_build(cls, query: str) -> 'Query':
         
-        from langchain_core.prompts import PromptTemplate
+        from langchain_core.messages import SystemMessage
         from langchain_openai import ChatOpenAI
         from dotenv import load_dotenv
         import os
         load_dotenv()
         
-        validated_pydantic: "Query" = (
-            PromptTemplate(
-                template = """
-                    Instruction: Analyse la requête utilisateur suivante pour interroger une archive d'articles nommée ADIT. Extrais les critères de recherche pertinents.
+        pydantic_query: "Query" = ChatOpenAI(
+            base_url="https://ia.beta.utc.fr/api",
+            temperature=0, 
+            model="mistral-small3.1:latest", 
+            api_key=os.getenv("UTC_API_KEY")
+        ).with_structured_output(cls).invoke(
+            SystemMessage(
+                content = f"""
+                Instruction: Analyse la requête utilisateur suivante pour interroger une archive d'articles nommée ADIT. Extrais les critères de recherche pertinents.
 
-                    Règles d'interprétation pour extraire les informations:
-                    - Le but est de générer une requête structurée pour une base de données.
-                    - Combine les différents types de critères (keywords, rubriques, date, titre, image) avec un 'ET' logique implicite, sauf indication contraire.
-                    - Si la requête utilise 'ou', 'soit...soit' pour des alternatives (ex: "articles sur A ou B", "rubrique X ou Y"), place ces alternatives ensemble dans la liste correspondante (`keywords` ou `rubriques`). S'il y a plusieurs mots-clés et que 'ou' est utilisé entre eux, utilise 'OR' pour `keywords_operator`. Sinon, utilise 'AND' (défaut).
-                    - Si la requête utilise des négations comme 'pas', 'sauf', 'sans', 'ne...pas', utilise les champs `excluded_keywords` ou `excluded_rubriques` pour ces termes exclus.
-                    - Interprète attentivement les expressions de date et de période : 'entre J1 et J2', 'après J', 'avant J', 'depuis AAAA', 'à partir de AAAA', 'en AAAA', 'le mois de M AAAA', 'l'année AAAA'. Détermine `date_start` et `date_end`. Normalise les dates au format AAAA-MM-JJ si possible, sinon AAAA-MM ou AAAA. Si seule une année est donnée (ex: 'en 2012'), utilise AAAA-01-01 pour `date_start` et AAAA-12-31 pour `date_end`. Pour 'après JJ/MM/AAAA', détermine la date de début appropriée (par exemple, le jour suivant ou le jour même selon l'usage commun). Pour 'à partir de AAAA', date_start est AAAA-01-01. Pour 'mois de Juin 2013', date_start=2013-06-01, date_end=2013-06-30.
-                    - Si des mots spécifiques sont requis explicitement dans le *titre* (ex: "titre contient X", "dont le titre traite de Y"), utilise le champ `title_contains`. Ne mets pas ces mots dans `keywords` sauf s'ils sont aussi des sujets généraux.
-                    - Si la présence d'une *image* est explicitement mentionnée comme requise ("avec image", "contenant une image"), règle `has_image` à `true`. Sinon, laisse-le à `null` ou `false`.
-                    - Si la question principale de l'utilisateur est de savoir "quelles rubriques" contiennent quelque chose (ex: "Dans quelles rubriques trouve-t-on..."), règle `target_info` à 'rubriques'. Sinon, laisse la valeur par défaut 'articles'.
-                    - Ignore les formules de politesse ("Je voudrais", "Afficher", "Donner", "Chercher", etc.) et concentre-toi sur les critères de recherche.
-                    - Si aucun critère d'un certain type n'est trouvé, l'outil omettra le champ correspondant ou le laissera à `null`.
-                    - Si la requête spécifie explicitement une EXCLUSION de période temporelle (ex: 'mais pas en juin', 'sauf décembre 2012', 'hormis la semaine du X au Y'), identifie cette période et ajoute-la à la liste `excluded_date_periods`. Essaie de normaliser au format 'AAAA-MM-JJ/AAAA-MM-JJ' si possible, sinon 'AAAA-MM' ou 'AAAA'. Par exemple, 'pas en juin 2012' devrait devenir '2012-06'. 'entre 2012 et 2014 sauf l'été 2013' pourrait générer date_start='2012-01-01', date_end='2014-12-31', excluded_date_periods=['2013-06-21/2013-09-22'].
+                Règles d'interprétation pour extraire les informations:
+                - Le but est de générer une requête structurée pour une base de données.
+                - Combine les différents types de critères (keywords, rubriques, date, titre, image) avec un 'ET' logique implicite, sauf indication contraire.
+                - Si la requête utilise 'ou', 'soit...soit' pour des alternatives (ex: "articles sur A ou B", "rubrique X ou Y"), place ces alternatives ensemble dans la liste correspondante (`keywords` ou `rubriques`). S'il y a plusieurs mots-clés et que 'ou' est utilisé entre eux, utilise 'OR' pour `keywords_operator`. Sinon, utilise 'AND' (défaut).
+                - Si la requête utilise des négations comme 'pas', 'sauf', 'sans', 'ne...pas', utilise les champs `excluded_keywords` ou `excluded_rubriques` pour ces termes exclus.
+                - Interprète attentivement les expressions de date et de période : 'entre J1 et J2', 'après J', 'avant J', 'depuis AAAA', 'à partir de AAAA', 'en AAAA', 'le mois de M AAAA', 'l'année AAAA'. Détermine `date_start` et `date_end`. Normalise les dates au format AAAA-MM-JJ si possible, sinon AAAA-MM ou AAAA. Si seule une année est donnée (ex: 'en 2012'), utilise AAAA-01-01 pour `date_start` et AAAA-12-31 pour `date_end`. Pour 'après JJ/MM/AAAA', détermine la date de début appropriée (par exemple, le jour suivant ou le jour même selon l'usage commun). Pour 'à partir de AAAA', date_start est AAAA-01-01. Pour 'mois de Juin 2013', date_start=2013-06-01, date_end=2013-06-30.
+                - Si des mots spécifiques sont requis explicitement dans le *titre* (ex: "titre contient X", "dont le titre traite de Y"), utilise le champ `title_contains`. Ne mets pas ces mots dans `keywords` sauf s'ils sont aussi des sujets généraux.
+                - Si la présence d'une *image* est explicitement mentionnée comme requise ("avec image", "contenant une image"), règle `has_image` à `true`. Sinon, laisse-le à `null` ou `false`.
+                - Si la question principale de l'utilisateur est de savoir "quelles rubriques" contiennent quelque chose (ex: "Dans quelles rubriques trouve-t-on..."), règle `target_info` à 'rubriques'. Sinon, laisse la valeur par défaut 'articles'.
+                - Ignore les formules de politesse ("Je voudrais", "Afficher", "Donner", "Chercher", etc.) et concentre-toi sur les critères de recherche.
+                - Si aucun critère d'un certain type n'est trouvé, l'outil omettra le champ correspondant ou le laissera à `null`.
+                - Si la requête spécifie explicitement une EXCLUSION de période temporelle (ex: 'mais pas en juin', 'sauf décembre 2012', 'hormis la semaine du X au Y'), identifie cette période et ajoute-la à la liste `excluded_date_periods`. Essaie de normaliser au format 'AAAA-MM-JJ/AAAA-MM-JJ' si possible, sinon 'AAAA-MM' ou 'AAAA'. Par exemple, 'pas en juin 2012' devrait devenir '2012-06'. 'entre 2012 et 2014 sauf l'été 2013' pourrait générer date_start='2012-01-01', date_end='2014-12-31', excluded_date_periods=['2013-06-21/2013-09-22'].
 
-                    Requête utilisateur: "{query}"
+                Requête utilisateur: "{query}"
 
-                    Extrais les informations et structure-les en utilisant l'outil fourni. Ne génère que la structure de données demandée.
-                """
-            )
-            | ChatOpenAI(
-                base_url="https://ia.beta.utc.fr/api",
-                temperature=0, 
-                model="mistral-small3.1:latest", 
-                api_key=os.getenv("UTC_API_KEY")
-            ).with_structured_output(cls)
-        ).invoke(
-            {"query": query}
+                Extrais les informations et structure-les en utilisant l'outil fourni. Ne génère que la structure de données demandée.
+            """)
         )
-        return validated_pydantic
+        return pydantic_query
     
     # ========== SEARCH ==========
     

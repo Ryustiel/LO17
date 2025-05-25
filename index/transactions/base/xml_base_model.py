@@ -39,8 +39,8 @@ class XMLBaseModel(BaseModel):
             tag = tags.get(class_name, class_name)
             
         root = ET.Element(tag)
-        for field_name, field_info in self.model_fields.items():
-            value = getattr(self, field_name)
+        for field_name in self.model_dump().keys():
+            value = self.model_dump()[field_name]
             if value is None:
                 continue
 

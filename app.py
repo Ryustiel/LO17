@@ -251,13 +251,17 @@ from index import Query, Corpus, InvertedIndex, spacy_lemmatize, correct_tokens
 STANDARDIZE: Callable[[str], str] = lambda x: re.sub(r"[^\w\s]", "", re.sub(r"'", " ", x.strip().lower()))
 # CORRECT_TOKENIZE_LEMMATIZE: Callable[[List[str]], List[str]] = lambda x: SUBSTITUTIONS.get(STANDARDIZE(x), None) or spacy_lemmatize(STANDARDIZE(x))[0]
 
-lexicon = set(SUBSTITUTIONS.values())
+lexicon = set(SUBSTITUTIONS.keys())
 def CORRECT_TOKENIZE_LEMMATIZE(x: str) -> str:
     token = SUBSTITUTIONS.get(STANDARDIZE(x), None)
     if token:
         return token
     tokens = correct_tokens(tokens=[x], lexicon=lexicon)
-    return tokens[0][0] if tokens[0][0] else spacy_lemmatize(STANDARDIZE(x))[0]
+    if tokens[0][0]:
+        token = SUBSTITUTIONS.get(tokens[0][0], None)
+        if token:
+            return token
+    return spacy_lemmatize(STANDARDIZE(x))[0]
 
 def APPLY(q: Query, func: callable, fields: List[str]) -> Query:
     """Apply a function to the tokens in specified fields of a Query object."""

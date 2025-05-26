@@ -4,7 +4,7 @@ Produit un ensemble de lemmes associés aux tokens d'entrée.
 
 from typing import List, Tuple
 
-def lemmatize_tokens(
+def correct_tokens(
     tokens: List[str],
     lexicon: List[str],
     min_len: int = 3,

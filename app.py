@@ -246,10 +246,18 @@ SUBSTITUTIONS = load_substitutions() # Charge les substitutions de lemmatisation
 
 # --- Préparation des pipelines de lemmatisation ---
 from typing import Callable
-from index import Query, Corpus, InvertedIndex, spacy_lemmatize
+from index import Query, Corpus, InvertedIndex, spacy_lemmatize, correct_tokens
 
 STANDARDIZE: Callable[[str], str] = lambda x: re.sub(r"[^\w\s]", "", re.sub(r"'", " ", x.strip().lower()))
-TOKENIZE_LEMMATIZE: Callable[[List[str]], List[str]] = lambda x: SUBSTITUTIONS.get(STANDARDIZE(x), None) or spacy_lemmatize(STANDARDIZE(x))[0]
+# CORRECT_TOKENIZE_LEMMATIZE: Callable[[List[str]], List[str]] = lambda x: SUBSTITUTIONS.get(STANDARDIZE(x), None) or spacy_lemmatize(STANDARDIZE(x))[0]
+
+lexicon = set(SUBSTITUTIONS.values())
+def CORRECT_TOKENIZE_LEMMATIZE(x: str) -> str:
+    token = SUBSTITUTIONS.get(STANDARDIZE(x), None)
+    if token:
+        return token
+    tokens = correct_tokens(tokens=[x], lexicon=lexicon)
+    return tokens[0][0] if tokens[0][0] else spacy_lemmatize(STANDARDIZE(x))[0]
 
 def APPLY(q: Query, func: callable, fields: List[str]) -> Query:
     """Apply a function to the tokens in specified fields of a Query object."""
@@ -260,7 +268,7 @@ def APPLY(q: Query, func: callable, fields: List[str]) -> Query:
 def recherche_lemma_ia(query: str) -> List[Document]:
     q = Query.build(query)
     st.session_state.build_query = copy.deepcopy(q)  # Stocke la requête pour l'affichage des snippets.
-    APPLY(q, TOKENIZE_LEMMATIZE, ["content_terms", "negated_content_terms", "title_terms"])
+    APPLY(q, CORRECT_TOKENIZE_LEMMATIZE, ["content_terms", "negated_content_terms", "title_terms"])
     APPLY(q, STANDARDIZE, ["rubric_terms", "negated_rubric_terms"])
     return q.search(documents={d.document_id: d for d in CORPUS.documents}, index=INDEX)
 

@@ -246,10 +246,10 @@ SUBSTITUTIONS = load_substitutions() # Charge les substitutions de lemmatisation
 
 # --- Préparation des pipelines de lemmatisation ---
 from typing import Callable
-from index import Query, Corpus, InvertedIndex
+from index import Query, Corpus, InvertedIndex, spacy_lemmatize
 
 STANDARDIZE: Callable[[str], str] = lambda x: re.sub(r"[^\w\s]", "", re.sub(r"'", " ", x.strip().lower()))
-TOKENIZE_LEMMATIZE: Callable[[List[str]], List[str]] = lambda x: SUBSTITUTIONS.get(STANDARDIZE(x), STANDARDIZE(x))
+TOKENIZE_LEMMATIZE: Callable[[List[str]], List[str]] = lambda x: SUBSTITUTIONS.get(STANDARDIZE(x), None) or spacy_lemmatize(STANDARDIZE(x))[0]
 
 def APPLY(q: Query, func: callable, fields: List[str]) -> Query:
     """Apply a function to the tokens in specified fields of a Query object."""

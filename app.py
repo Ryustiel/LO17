@@ -248,7 +248,10 @@ SUBSTITUTIONS = load_substitutions() # Charge les substitutions de lemmatisation
 from typing import Callable
 from index import Query, Corpus, InvertedIndex, spacy_lemmatize, correct_tokens
 
-STANDARDIZE: Callable[[str], str] = lambda x: re.sub(r"[^\w\s]", "", re.sub(r"'", " ", x.strip().lower()))
+STANDARDIZE = lambda x: re.sub(
+    r"[^\w\s]", "",
+    re.sub(r"[-']", " ", x.strip().lower())
+)
 # CORRECT_TOKENIZE_LEMMATIZE: Callable[[List[str]], List[str]] = lambda x: SUBSTITUTIONS.get(STANDARDIZE(x), None) or spacy_lemmatize(STANDARDIZE(x))[0]
 
 lexicon = set(SUBSTITUTIONS.keys())
